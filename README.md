@@ -1,7 +1,7 @@
-Here’s the README in code format, which you can directly paste into your `README.md` file:
+
 
 ```markdown
-# 🌟 **HR Management System** 🌟
+# 🌟 **HR-Spectrum** 🌟
 
 This **HR Management System** is a web application designed to manage employee data, track attendance, handle performance evaluations, manage leaves, and utilize geofencing for location-based attendance tracking. It provides a centralized platform for HR teams to monitor and evaluate employee performance in real-time.
 
