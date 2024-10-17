@@ -1,0 +1,46 @@
+.employee-list {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.employee-list h2{
+    margin: 2rem 0 2rem;
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+li{
+    list-style: none;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #4e925d;
+    text-align: left;
+}
+
+th {
+    background-color: #76de8d;
+}
+
+h2 {
+    color: #333;
+}
+.employee-list button{
+    margin-top: 1rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .employee-list button:hover {
+    background-color: #218838;
+  }
+

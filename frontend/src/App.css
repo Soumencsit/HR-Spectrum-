@@ -1,0 +1,26 @@
+.app-container{
+    /* margin-left: 2rem; */
+    display: flex;
+    
+}
+
+.content{
+    /* margin-top: 10rem; */
+    /* margin-top: 5rem; */
+    /* margin-left: 5rem; */
+   
+}
+.nav{
+    width:85vw;
+    height: 6.5rem;
+    background-color: #f4f4f4;
+    
+    
+}
+.nav img{
+    height: 6rem;
+    width: 8rem;
+    position: absolute;
+    right:1px;
+    top: 1px;
+}

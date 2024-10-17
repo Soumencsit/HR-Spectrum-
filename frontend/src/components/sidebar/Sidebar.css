@@ -1,0 +1,101 @@
+
+
+.sidebar {
+
+  min-width: 280px;
+  min-height: 100vh;
+  background-color: #f4f4f4;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.sidebar-title{
+  padding: 2rem 0 0rem 0;
+  margin-right: 2.5rem;
+  background-color: #f4f4f4;
+  border-bottom: 3px dotted #76de8d ;
+  
+}
+
+.sidebar-title h2{
+  font-size: 2rem;
+ 
+  color: #13321a;
+ 
+  text-shadow: 2px 2px #76de8d ;
+  
+  
+}
+
+.sidebar ul {
+  margin-top: 2px;
+  list-style-type: none;
+  padding: 0;
+
+}
+
+.sidebar ul li {
+  margin: 2rem 0;
+  padding: 0.5rem 1rem
+ 
+}
+.sidebar-li{
+  cursor: pointer;
+  padding: 5px 10px;
+  border-top:1px solid gray ;
+  border-left:1px solid gray ;
+  border-bottom:1px solid gray ;
+  border-radius: 5px 0px 0px 5px; 
+
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: #333;
+}
+
+.dropdown-toggle {
+  cursor: pointer;
+  padding: 5px 5px;
+  
+
+
+}
+
+
+.dropdown-menu {
+  margin: 5px 0 0 5px; 
+  padding: 0;
+  list-style-type: none;
+  border-radius: 5px;
+}
+
+.drpdown{
+  border-top:1px solid gray ;
+  border-left:1px solid gray ;
+  border-bottom:1px solid gray ;
+  border-radius: 5px 0px 0px 5px; 
+  
+
+}
+.dropdown-menu li {
+
+  margin: 1px; 
+}
+
+.dropdown-menu li a {
+  display: block; 
+  padding: 8px 10px; 
+}
+
+
+
+.active-tab {
+  background-color: #76de8d; 
+  font-weight: bold; 
+  color: #333; 
+}
+
+
