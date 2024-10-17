@@ -76,4 +76,3 @@ This **HR Management System** empowers organizations to manage all HR activities
 With this setup, you're ready to manage your HR workflows efficiently and effectively! 🎉
 ```
 
-Just copy and paste this into your `README.md`, and you’re all set!
