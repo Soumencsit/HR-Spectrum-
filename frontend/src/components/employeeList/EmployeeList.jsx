@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react"; 
 import axios from "axios"; 
 import "./EmployeeList.css"; 
@@ -27,10 +26,16 @@ const EmployeeList = () => {
   const fetchPerformance = async (uniqueId) => {
     try {
       const res = await axios.get(`http://localhost:3000/performance/review/${uniqueId}`);
-      return res.data;
+      if(res.data){
+        return res.data ;
+      }
+      else{
+        return "No Performance History Found"
+      }
+      
     } catch (error) {
       console.error(`Error fetching performance for uniqueId ${uniqueId}:`, error);
-      return "No performance review found";
+      return []; // Change to return an empty array if there's an error
     }
   };
 
@@ -54,7 +59,7 @@ const EmployeeList = () => {
   const handleRemove = async (employeeId) => {
     try {
       await axios.delete(`http://localhost:3000/employees/delete/${employeeId}`);
-      setEmployees(employees.filter((employee) => employee._id !== employeeId));
+      setEmployees(employees.filter((employee) => employee.uniqueId !== employeeId)); // Change _id to uniqueId for consistency
       toast.success("Employee removed successfully!");
     } catch (error) {
       console.error("Error deleting employee:", error);
@@ -94,7 +99,7 @@ const EmployeeList = () => {
                     Array.isArray(performanceData[employee.uniqueId]) && performanceData[employee.uniqueId].length > 0 ? (
                       <ul>
                         {performanceData[employee.uniqueId].map((review, index) => (
-                          <li key={index} >
+                          <li key={index}>
                             {review.reviewPeriod} :: {review.rating}⭐ :: {review.comments}
                           </li>
                         ))}
@@ -107,7 +112,7 @@ const EmployeeList = () => {
                   )}
                 </td>
                 <td>
-                  <button onClick={() => handleRemove(employee._id)}>Remove</button>
+                  <button onClick={() => handleRemove(employee.uniqueId)}>Remove</button> {/* Use uniqueId */}
                 </td>
               </tr>
             ))}
@@ -119,4 +124,3 @@ const EmployeeList = () => {
 };
 
 export default EmployeeList;
-
