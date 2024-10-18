@@ -1,53 +1,65 @@
-
 import React, { useState } from 'react';
 import axios from 'axios';
-import LeaveManagement from './LeaveManagement';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; 
+import 'react-toastify/dist/ReactToastify.css';
 
 const LeaveApply = ({ fetchPendingLeaves, setMessage }) => {
-  // State to hold leave application data
   const [leaveData, setLeaveData] = useState({
-    uniqueId: '',     // Employee's unique ID
-    leaveType: '',    // Type of leave selected
-    startDate: '',    // Start date of the leave
-    endDate: '',      // End date of the leave
+    uniqueId: '',
+    leaveType: '',
+    startDate: '',
+    endDate: '',
   });
 
-  // Function to handle input field changes
   const handleChange = (e) => {
-    setLeaveData({ ...leaveData, [e.target.name]: e.target.value }); // Update corresponding field in state
+    setLeaveData({ ...leaveData, [e.target.name]: e.target.value });
   };
 
-  // Function to handle leave application submission
   const handleApplyLeave = async () => {
-    // Check if unique ID is entered
     if (!leaveData.uniqueId) {
-      toast.error('Please enter a Unique ID.'); // Show error message
-      setMessage('Please enter a Unique ID.'); // Set message for parent component
-      return; // Exit function if unique ID is not provided
+      toast.error('Please enter a Unique ID.');
+      setMessage('Please enter a Unique ID.');
+      return;
     }
-  
+
     try {
-      // Send leave application data to the server
-      await axios.post('http://localhost:3000/leave/apply', { ...leaveData });
-      toast.success('Leave applied successfully'); // Show success message
+      // Check if the employee exists
+      const employeeCheckResponse = await axios.get(`http://localhost:3000/leave/check/${leaveData.uniqueId}`);
+      console.log(leaveData.uniqueId);
       
-      fetchPendingLeaves(); // Refresh the pending leaves list
+      if (employeeCheckResponse.status !== 200) {
+        toast.error('Invalid Employee ID.');
+        return;
+      }
+
+      // Apply for leave if employee exists
+      await axios.post(`http://localhost:3000/leave/apply/${leaveData.uniqueId}`, {
+        status:"pending",
+        leaveType: leaveData.leaveType,
+        startDate: leaveData.startDate,
+        endDate: leaveData.endDate,
+      });
+      toast.success('Leave applied successfully');
+      // fetchPendingLeaves();
+      setLeaveData({ uniqueId: '', leaveType: '', startDate: '', endDate: '' }); // Clear form
     } catch (error) {
-      toast.error('Error applying leave'); // Show error message on failure
+      if (error.response && error.response.status === 404) {
+        toast.error('Invalid Employee ID.');
+      } else {
+        toast.error('Error applying leave');
+      }
     }
   };
-  
+
   return (
     <div className="apply-leave">
-      <ToastContainer /> {/* Toast container for displaying notifications */}
+      <ToastContainer />
       <input
         type="text"
-        name="uniqueId" // Name attribute matches the state key
-        value={leaveData.uniqueId} // Controlled input for unique ID
-        onChange={handleChange} // Call handleChange on input change
-        placeholder="Enter Employee ID" // Placeholder for input
+        name="uniqueId"
+        value={leaveData.uniqueId}
+        onChange={handleChange}
+        placeholder="Enter Employee ID"
       />
       <select name="leaveType" value={leaveData.leaveType} onChange={handleChange}>
         <option value="">Select Leave Type</option>
@@ -55,35 +67,27 @@ const LeaveApply = ({ fetchPendingLeaves, setMessage }) => {
         <option value="sick">Sick Leave</option>
         <option value="personal">Personal Leave</option>
       </select>
-      
       <div className='input-date'>
-        <div className='input-date-1'>
-          <label htmlFor="startDate">Start Date:</label>
-          <input
-            type="date"
-            id="startDate" // Add the id for association with the label
-            name="startDate"
-            value={leaveData.startDate} // Controlled input for start date
-            onChange={handleChange} // Call handleChange on input change
-          />
-        </div>
-
-        <div>
-          <label htmlFor="endDate">End Date:</label>
-          <input
-            type="date"
-            id="endDate"  // Add the id for association with the label
-            name="endDate"
-            value={leaveData.endDate} // Controlled input for end date
-            onChange={handleChange} // Call handleChange on input change
-            placeholder='End Date'
-          />
-        </div>
+        <label htmlFor="startDate">Start Date:</label>
+        <input
+          type="date"
+          id="startDate"
+          name="startDate"
+          value={leaveData.startDate}
+          onChange={handleChange}
+        />
+        <label htmlFor="endDate">End Date:</label>
+        <input
+          type="date"
+          id="endDate"
+          name="endDate"
+          value={leaveData.endDate}
+          onChange={handleChange}
+        />
       </div>
-      
-      <button onClick={handleApplyLeave}>Apply Leave</button> {/* Button to submit leave application */}
+      <button onClick={handleApplyLeave}>Apply Leave</button>
     </div>
   );
 };
 
-export default LeaveApply; // Export the component for use in other parts of the application
+export default LeaveApply;
