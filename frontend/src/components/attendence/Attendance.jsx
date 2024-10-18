@@ -5,30 +5,45 @@ import { toast, ToastContainer } from 'react-toastify'; // Importing react-toast
 import 'react-toastify/dist/ReactToastify.css'; // Importing the CSS for toast notifications
 
 const Attendance = () => {
-  // Component state to manage the unique ID and the status message
+  // Component state to manage the unique ID, status message, and overtime hours
   const [status, setStatus] = useState(''); 
   const [uniqueId, setUniqueId] = useState(''); 
+  const [overtimeHours, setOvertimeHours] = useState(null); // State for overtime hours
 
   // Function to handle check-in operation
   const handleCheckIn = async () => {
+    if (!uniqueId) {
+      toast.error('Please enter a Unique ID');
+      return;
+    }
+
     try {
-      // Sending a POST request to check in the user with the provided unique ID
       const response = await axios.post('http://localhost:3000/attendance/checkin', { uniqueId });
+      setStatus(response.data.message); // Set status message based on the response
       toast.success('Check-in success'); // Display success toast message
     } catch (error) {
-      toast.error('Check-in failed'); // Display error toast message on failure
+      const errorMessage = error.response?.data?.error || 'Check-in failed';
+      setStatus(errorMessage);
+      toast.error(errorMessage); // Display error toast message on failure
     }
   };
 
   // Function to handle check-out operation
   const handleCheckOut = async () => {
+    if (!uniqueId) {
+      toast.error('Please enter a Unique ID');
+      return;
+    }
+
     try {
-      // Sending a POST request to check out the user with the provided unique ID
       const response = await axios.post('http://localhost:3000/attendance/checkout', { uniqueId });
+      setStatus(response.data.message); // Set status message based on the response
+      setOvertimeHours(response.data.overtimeHours); // Set overtime hours state
       toast.success('Check-out success'); // Display success toast message
-      toast.success(`Overtime ${response.data.overtimeHours} hours`); // Display overtime hours if available
     } catch (error) {
-      toast.error('Check-out failed'); // Display error toast message on failure
+      const errorMessage = error.response?.data?.error || 'Check-out failed';
+      setStatus(errorMessage);
+      toast.error(errorMessage); // Display error toast message on failure
     }
   };
 
@@ -47,6 +62,7 @@ const Attendance = () => {
       <button className="button" onClick={handleCheckIn}>Check In</button> {/* Button to trigger check-in */}
       <button className="button" onClick={handleCheckOut}>Check Out</button> {/* Button to trigger check-out */}
       <p className="status">{status}</p> {/* Placeholder for displaying any status messages */}
+      {overtimeHours !== null && <p className="status">Overtime: {overtimeHours} hours</p>} {/* Display overtime hours */}
     </div>
   );
 };
