@@ -6,7 +6,7 @@ import Sidebar from './components/sidebar/Sidebar';
 import EmployeeList from './components/employeeList/EmployeeList';
 import AddEmployee from './components/addEmployee/AddEmployee';
 import Attendance from './components/attendence/Attendance';
-import LeaveManagement from './pages/home/LeaveManagement';
+import LeaveManagement from './components/leaveManagement/LeaveManagement';
 import DevelopmentPlan from './components/PerformanceDevelopment/DevelopmentPlan';
 import GoalManagement from './components/performanceGoal/GoalManagement';
 import PerformanceReview from './components/performancReview/PerformanceReview';
@@ -26,7 +26,7 @@ const App = () => {
             <Route path="/add-employee" element={<AddEmployee />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/leave-management/*" element={<LeaveManagement />} />
-            
+           
             <Route path='/development' element={<DevelopmentPlan/>} />
             <Route path='/goal' element={<GoalManagement/>} />
             <Route path='/review' element={<PerformanceReview/>} />
