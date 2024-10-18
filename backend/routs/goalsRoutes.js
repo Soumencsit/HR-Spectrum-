@@ -1,64 +1,80 @@
-// routes/goals.js
 const express = require("express");
 const goalRouter = express.Router();
-const Goal = require("../models/Goal");
+const UnifiedModel = require("../models/UnifiedModel");
 
+
+// Fetch all goals for all employees
 goalRouter.get("/all", async (req, res) => {
   try {
-    const goals = await Goal.find();
-    res.json(goals);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    // Fetch all employees and include only the goals array
+    const employees = await UnifiedModel.find({}, { goals: 1, uniqueId: 1 });
+
+    // Map through employees and their goals, including goal IDs and employee unique IDs
+    const allGoals = employees.flatMap(employee => 
+      employee.goals.map(goal => ({
+        employeeId: employee.uniqueId, // Include the employee's unique ID
+        goalId: goal._id,              // Include the goal's unique ID
+        title: goal.title,
+        description: goal.description,
+        startDate: goal.startDate,
+        endDate: goal.endDate,
+        progress: goal.progress,
+      }))
+    );
+
+    res.json(allGoals); // Respond with the list of all goals including their IDs and employee IDs
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
-
-
-// Other existing routes...
-
-// Update progress for a specific goal by unique ID
-goalRouter.put("/update/:uniqueId", async (req, res) => {
-  try {
-    const { uniqueId } = req.params;
-    const { progress } = req.body;
-
-    // Find the goal by uniqueId
-    const goal = await Goal.findOne({ uniqueId });
-
-    if (!goal) {
-      return res.status(404).json({ message: "Goal not found" });
-    }
-
-    // Update progress
-    goal.progress = progress;
-    const updatedGoal = await goal.save();
-    res.json(updatedGoal);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-module.exports = goalRouter;
-
-// Fetch all goals for a specific employee
-goalRouter.get("/:uniqueId", async (req, res) => {
-  try {
-    const goals = await Goal.find({ uniqueId: req.params.uniqueId });
-    res.json(goals);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
 
 // Add a new goal
-goalRouter.post("/add", async (req, res) => {
-  const goal = new Goal(req.body);
+goalRouter.post("/add/:uniqueId", async (req, res) => {
+  const { uniqueId } = req.params;
+  const newGoal = req.body;
+
   try {
-    const newGoal = await goal.save();
-    res.status(201).json(newGoal);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    // Check if the employee exists
+    const employee = await UnifiedModel.findOne({ uniqueId });
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    // Add the goal to the employee's goals array
+    employee.goals.push(newGoal);
+    await employee.save();
+    res.status(201).json({ message: "Goal added successfully", goal: newGoal });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
+
+
+goalRouter.post("/add/:uniqueId", async (req, res) => {
+  const { uniqueId } = req.params;
+  const newGoal = req.body;
+
+  try {
+    const employee = await UnifiedModel.findOne({ uniqueId });
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    employee.goals.push(newGoal);
+    await employee.save();
+    res.status(201).json(employee.goals);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+goalRouter.get("/:uniqueId", async (req, res) => {
+  try {
+    const employee = await UnifiedModel.findOne({ uniqueId: req.params.uniqueId }, { goals: 1 });
+    if (!employee) return res.status(404).json({ message: "Goals not found" });
+    res.json(employee.goals);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 
 module.exports = goalRouter;
