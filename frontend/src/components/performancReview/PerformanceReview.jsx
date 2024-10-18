@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './PerformanceReview.css';
@@ -11,34 +10,27 @@ const PerformanceReview = () => {
     rating: '',
     comments: '',
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Function to fetch all performance reviews
   const fetchAllReviews = () => {
     axios.get('http://localhost:3000/performance/review/all')
-      .then(response => setReviews(response.data))
-      .catch(error => console.error('Error fetching reviews:', error));
+      .then(response => {
+        setReviews(response.data); // Assuming response.data is an array of reviews
+      })
+      .catch(error => {
+        console.error('Error fetching reviews:', error);
+      });
   };
 
   useEffect(() => {
     fetchAllReviews();
+  
+  
+    
+   
+    
   }, []);
-
-  // Fetch reviews based on uniqueId
-  // useEffect(() => {
-  //   if (uniqueId) {
-  //     axios.get(`http://localhost:3000/performance/review/${uniqueId}`)
-  //       .then(response => {
-  //         if (response.data === "None") {
-  //           setReviews([]); // Clear reviews if none are found
-  //         } else {
-  //           setReviews(response.data);
-  //         }
-  //       })
-  //       .catch(error => console.error('Error fetching reviews by unique ID:', error));
-  //   } else {
-  //     fetchAllReviews(); // If no uniqueId, fetch all reviews
-  //   }
-  // }, [uniqueId]);
 
   // Handle input changes in the form
   const handleInputChange = (e) => {
@@ -48,30 +40,44 @@ const PerformanceReview = () => {
 
   // Submit the new review
   const submitReview = (e) => {
-    e.preventDefault(); // Prevent the page from reloading
+    e.preventDefault();
+    if (!uniqueId) {
+      setErrorMessage('Please enter a Unique ID before submitting the review.');
+      return;
+    }
+
     const reviewWithUniqueId = { ...newReview, uniqueId };
 
-    axios.post('http://localhost:3000/performance/review/add', reviewWithUniqueId)
+    axios.post(`http://localhost:3000/performance/review/add/${uniqueId}`, reviewWithUniqueId)
       .then(response => {
-        setReviews([...reviews, response.data]); // Add the new review to the existing reviews
-        setNewReview({ reviewPeriod: '', rating: '', comments: '' }); // Clear the form
+        setReviews([...reviews, response.data]);
+        setNewReview({ reviewPeriod: '', rating: '', comments: '' });
+        fetchAllReviews()
+        setErrorMessage('');
       })
-      .catch(error => console.error('Error adding review:', error));
+      .catch(error => {
+        // Check if the error response indicates an invalid employee ID
+        if (error.response && error.response.status === 404) {
+          setErrorMessage('Invalid employee ID.');
+        } else {
+          setErrorMessage('Error adding review. Please try again.');
+        }
+      });
   };
 
   return (
     <>
       <div className="performance-review-container">
         <h3>Performance Reviews</h3>
-        {/* Input field for entering Unique ID */}
         <input 
           type="text" 
           placeholder="Unique ID" 
-          onChange={(e) => setUniqueId(e.target.value)} 
+          onChange={(e) => {
+            setUniqueId(e.target.value);
+            setErrorMessage(''); // Clear error message on Unique ID change
+          }} 
           value={uniqueId} 
         />
-
-        {/* Form to submit a new review */}
         <form onSubmit={submitReview}>
           <input 
             type="text" 
@@ -93,35 +99,35 @@ const PerformanceReview = () => {
             onChange={handleInputChange}
             value={newReview.comments} 
           />
-          <button type="submit">Submit Review</button> {/* Button to submit review */}
+          <button type="submit">Submit Review</button>
+          {errorMessage && <p className="error-message">{errorMessage}</p>} 
         </form>
       </div>
-
       <div className="performance-reviews-table-container">
         <h4>Past Reviews:</h4>
         {reviews.length === 0 ? (
           <p>No performance reviews found</p>
         ) : (
           <table>
-            <thead>
-              <tr>
-                <th>Unique ID</th>
-                <th>Review Period</th>
-                <th>Rating</th>
-                <th>Comments</th>
+          <thead>
+            <tr>
+              <th>Unique ID</th>
+              <th>Review Period</th>
+              <th>Rating</th>
+              <th>Comments</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reviews.map((review) => (
+              <tr key={review._id}> {/* Use unique identifier for the key */}
+                <td>{review.employeeId}</td> {/* Display the uniqueId */}
+                <td>{review.reviewPeriod}</td>
+                <td>{review.rating}</td>
+                <td>{review.comments}</td>
               </tr>
-            </thead>
-            <tbody>
-              {reviews.map((review) => (
-                <tr key={review._id}>
-                  <td>{review.uniqueId}</td>
-                  <td>{review.reviewPeriod}</td>
-                  <td>{review.rating}</td>
-                  <td>{review.comments}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+        </tbody>
+        </table>
         )}
       </div>
     </>
