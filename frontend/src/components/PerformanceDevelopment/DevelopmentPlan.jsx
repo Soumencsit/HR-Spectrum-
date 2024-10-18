@@ -21,9 +21,15 @@ const DevelopmentPlan = () => {
       .catch(error => console.error('Error fetching all development plans:', error)); // Log any errors
   };
 
+ 
+
   // Fetch all plans on component mount
   useEffect(() => {
     fetchAllPlans();
+    console.log(plans);
+    
+    
+    
   }, []); // Empty dependency array means this effect runs once when the component mounts
 
   // Fetch development plans whenever uniqueId changes
@@ -50,10 +56,11 @@ const DevelopmentPlan = () => {
   const submitPlan = () => {
     axios.post('http://localhost:3000/performance/development/add', { ...newPlan, uniqueId }) // API endpoint to add a new plan
       .then(response => {
-        // Update the plans state with the newly added plan
-        setPlans([...plans, response.data]);
+        // Append the newly added plan to the existing plans
+        setPlans(prevPlans => [...prevPlans, response.data]); // Use a function to get the previous state
         // Clear the form fields after submission
         setNewPlan({ skillsToDevelop: '', resources: '', timeline: '' });
+        fetchAllPlans();
       })
       .catch(error => console.error('Error adding development plan:', error)); // Log any errors
   };
@@ -101,25 +108,26 @@ const DevelopmentPlan = () => {
           <p>No development plans found</p> // Display message if no plans exist
         ) : (
           <table>
-            <thead>
-              <tr>
-                <th>Employee Id</th>
-                <th>Skills to Develop</th>
-                <th>Learning Resources</th>
-                <th>Timeline</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plans.map((plan) => (
-                <tr key={plan._id}>
-                  <td>{plan.uniqueId}</td>
-                  <td>{plan.skillsToDevelop}</td>
-                  <td>{plan.resources}</td>
-                  <td>{plan.timeline}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <thead>
+          <tr>
+            <th>Employee Id</th>
+            <th>Skills to Develop</th>
+            <th>Learning Resources</th>
+            <th>Timeline</th>
+          </tr>
+        </thead>
+        <tbody>
+          {plans.map((plan, index) => (
+            <tr key={index}>
+              <td>{plan.employeeId}</td> {/* Display the unique ID associated with the plans */}
+              <td>{plan.skillsToDevelop}</td>
+              <td>{plan.resources}</td>
+              <td>{plan.timeline}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
         )}
       </div>
     </>
