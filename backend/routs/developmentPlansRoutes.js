@@ -1,44 +1,56 @@
 const express = require("express");
 const developmentRouter = express.Router();
-const DevelopmentPlan = require("../models/DevelopmentPlan");
+const UnifiedModel = require("../models/UnifiedModel");
 
-developmentRouter.get("/kk", (req, res) => {
-  console.log("Hello jii");
-});
 
-// Fetch all development plans
+// Fetch all development plans for all employees
 developmentRouter.get("/all", async (req, res) => {
   try {
-    const plans = await DevelopmentPlan.find();
+    const employees = await UnifiedModel.find({}, { developmentPlans: 1, uniqueId: 1 });
 
-    res.json(plans);
+    // Extract plans and map to include employee ID and relevant details
+    const allPlans = employees.flatMap(employee => 
+      employee.developmentPlans.map(plan => ({
+        employeeId: employee.uniqueId, // Include the employee's unique ID
+        skillsToDevelop: plan.skillsToDevelop,
+        resources: plan.resources,
+        timeline: plan.timeline,
+      }))
+    );
+
+    res.json(allPlans); // Respond with the list of all development plans
   } catch (error) {
     res.status(500).json({ message: "Error fetching development plans" });
   }
 });
 
-// Fetch all development plans for a specific employee
-developmentRouter.get("/:uniqueId", async (req, res) => {
-  console.log("hello ji");
 
+
+// Fetch development plans for a specific employee
+developmentRouter.get("/:uniqueId", async (req, res) => {
   try {
-    const plans = await DevelopmentPlan.find({ uniqueId: req.params.uniqueId });
-    res.json(plans);
-  } catch (err) {
-    console.error("Error fetching plans:", err); // Log the error for debugging
-    res.status(500).json({ message: err.message });
+    const plans = await UnifiedModel.findOne({ uniqueId: req.params.uniqueId }, { developmentPlans: 1 });
+    if (!plans) return res.status(404).json({ message: "Development plans not found" });
+    res.json(plans.developmentPlans);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Add a new development plan
 developmentRouter.post("/add", async (req, res) => {
-  const developmentPlan = new DevelopmentPlan(req.body);
+  const { uniqueId } = req.body;
+  const newPlan = req.body;
+
   try {
-    const newPlan = await developmentPlan.save();
-    res.status(201).json(newPlan);
-  } catch (err) {
-    console.error("Error adding new plan:", err); // Log the error for debugging
-    res.status(400).json({ message: err.message });
+    const employee = await UnifiedModel.findOne({ uniqueId });
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    employee.developmentPlans.push(newPlan);
+    await employee.save();
+    res.status(201).json(employee.developmentPlans);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
