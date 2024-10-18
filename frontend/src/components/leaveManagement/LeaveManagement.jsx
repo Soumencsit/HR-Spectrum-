@@ -13,17 +13,6 @@ const LeaveManagement = () => {
   const [approvedLeaves, setApprovedLeaves] = useState([]);
   const [message, setMessage] = useState('');
 
-  // const fetchPendingLeaves = async () => {
-  //   try {
-  //     const response = await axios.get('http://localhost:3000/leave/pending');
-  //     setPendingLeaves(response.data);
-  //     toast.success('Pending leaves fetched successfully');
-  //   } catch (error) {
-  //     console.error('Error fetching pending leaves:', error);
-  //     setMessage('Error fetching pending leaves');
-  //     toast.error('Error fetching pending leaves');
-  //   }
-  // };
 
 
   const fetchPendingLeaves = async () => {
