@@ -11,22 +11,19 @@ const AddEmployee = () => {
     contact: "",
     jobRole: "",
     salary: "",
-    uniqueId: "",
   });
-  
-  // State to handle file uploads (e.g., employee documents)
-  const [file, setFile] = useState(null);
 
   // State to store the current count of employees in the system
   const [employeeCount, setEmployeeCount] = useState(0);
+  
+  // State to handle loading status
+  const [loading, setLoading] = useState(false);
 
   // Fetch the current employee count from the server when the component mounts
   useEffect(() => {
     const fetchEmployeeCount = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3000/employees/count"
-        );
+        const response = await axios.get("http://localhost:3000/employees/count");
         setEmployeeCount(response.data.count);
       } catch (error) {
         console.error("Error fetching employee count:", error);
@@ -41,68 +38,76 @@ const AddEmployee = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle file input changes and store the selected file
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  // Validate input fields
+  const validateInputs = () => {
+    const { contact, salary } = formData;
+    const salaryValue = parseFloat(salary);
+    const phoneRegex = /^[0-9]{10}$/; // Basic phone number validation
+
+    if (!phoneRegex.test(contact)) {
+      toast.error("Contact must be a 10-digit number");
+      return false;
+    }
+    if (salaryValue <= 0) {
+      toast.error("Salary must be a positive number");
+      return false;
+    }
+    return true;
   };
 
   // Handle form submission to add a new employee
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Generate a unique ID for the employee based on the current date and employee count
+    if (!validateInputs()) return; // Validate inputs before submission
+
+    // Set loading state to true
+    setLoading(true);
+
+    // Get the current date
     const now = new Date();
     const year = now.getFullYear().toString();
     const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    const sequentialNumber = (employeeCount + 1).toString().padStart(2, "0");
-    const uniqueId = `${year}${month}${sequentialNumber}`;
+    const day = now.getDate().toString().padStart(2, "0");
+    const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+   
+
+    // Format unique ID
+    const uniqueId = `${year}${month}${day}${randomNumber}${employeeCount}`;
 
     // Prepare the data for submission
     const dataToSubmit = { ...formData, uniqueId };
 
     try {
       // Add employee details to the database
-      const employeeRes = await axios.post(
-        "http://localhost:3000/employees/add",
-        dataToSubmit
-      );
-      const employeeId = employeeRes.data._id;
-
-      // If a file is selected, upload the document for the added employee
-      if (file) {
-        const formDataFile = new FormData();
-        formDataFile.append("document", file);
-        await axios.post(
-          `http://localhost:3000/employees/upload/${employeeId}`,
-          formDataFile
-        );
-      }
-
-      // Notify success using toast and reset the form
+      await axios.post("http://localhost:3000/employees/add", dataToSubmit);
       toast.success("Employee added successfully");
 
-      // Reset form data and file input after successful submission
+      // Reset form data after successful submission
       setFormData({
         name: "",
         contact: "",
         jobRole: "",
         salary: "",
-        uniqueId: "",
       });
-      setFile(null);
       setEmployeeCount(employeeCount + 1); // Update employee count
     } catch (error) {
       console.error(error);
-      alert("Error adding employee");
+      toast.error("Error adding employee");
+    } finally {
+      // Reset loading state
+      setLoading(false);
     }
   };
 
   return (
     <div className="card">
-      <ToastContainer /> {/* Display toast notifications */}
-      
+      <ToastContainer />
+
+      <h2>Add New Employee</h2>
+    
+
       <form onSubmit={handleSubmit}>
-        {/* Input fields for employee details */}
         <input
           type="text"
           name="name"
@@ -135,12 +140,11 @@ const AddEmployee = () => {
           placeholder="Salary"
           required
         />
-
-        {/* File upload input for employee documents */}
-        <input type="file" onChange={handleFileChange} />
         
-        {/* Submit button */}
-        <button type="submit">Add Employee</button>
+        {/* Submit button with loading state */}
+        <button type="submit" disabled={loading}>
+          {loading ? "Adding..." : "Add Employee"}
+        </button>
       </form>
     </div>
   );
