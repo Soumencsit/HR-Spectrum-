@@ -1,98 +1,100 @@
 const express = require("express");
-const Leave = require("../models/Leave");
 const leaveRouter = express.Router();
+const UnifiedModel = require("../models/UnifiedModel");
 
 // Apply for leave
-leaveRouter.post("/apply", async (req, res) => {
-  const { uniqueId, leaveType, startDate, endDate } = req.body;
-  const leave = new Leave({ uniqueId, leaveType, startDate, endDate });
+leaveRouter.post("/apply/:uniqueId", async (req, res) => {
+  const { uniqueId } = req.params;
+  const newLeave = req.body;
+
   try {
-    await leave.save();
-    res.status(201).json({ message: "Leave applied successfully", leave });
+    const employee = await UnifiedModel.findOne({ uniqueId });
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    // Set leave information
+    employee.leave = newLeave; // Directly assign the leave object
+    await employee.save();
+    res.status(201).json({ message: "Leave applied successfully", leave: employee.leave });
   } catch (error) {
-    res.status(400).json({ error });
+    res.status(400).json({ error: error.message });
   }
 });
 
-// Update leave status using uniqueId
+// List all pending leaves
+leaveRouter.get("/pending", async (req, res) => {
+  try {
+    const employees = await UnifiedModel.find({ "leave.status": "pending" }).select("uniqueId name leave");
+    if (employees.length === 0) return res.status(404).json({ message: "No pending leaves found" });
+
+    const pendingLeaves = employees.map(emp => ({
+      uniqueId: emp.uniqueId,
+      leaveType: emp.leave.leaveType,  // Make sure to map the leaveType
+      startDate: emp.leave.startDate,
+      endDate: emp.leave.endDate
+    }));
+
+    res.status(200).json(pendingLeaves); // Send just the array of pending leaves
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// Check if an employee exists by uniqueId
+leaveRouter.get("/check/:uniqueId", async (req, res) => {
+  const { uniqueId } = req.params;
+  try {
+    const employee = await UnifiedModel.findOne({ uniqueId });
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    res.status(200).json({ message: "Employee exists" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fetch the leave request (pending or approved)
+
+
+// Update leave status
 leaveRouter.put("/update/:uniqueId", async (req, res) => {
-  const uniqueId = req.params.uniqueId;
+  const { uniqueId } = req.params;
   const { status } = req.body;
 
   try {
-    const leave = await Leave.findOne({ uniqueId });
-    if (!leave) {
-      return res.status(404).json({ message: "Leave not found" });
-    }
+    const employee = await UnifiedModel.findOne({ uniqueId });
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
 
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
+    if (!employee.leave) return res.status(404).json({ message: "Leave not found" });
 
-    leave.status = status;
-    await leave.save();
-    res.status(200).json({ message: "Leave status updated", leave });
+    employee.leave.status = status; // Update status directly
+    await employee.save();
+    res.json({ message: "Leave status updated", leave: employee.leave });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Delete leave by uniqueId
-leaveRouter.delete("/delete/:uniqueId", async (req, res) => {
-  const uniqueId = req.params.uniqueId;
-  console.log(uniqueId);
 
-  try {
-    const leave = await Leave.findOneAndDelete({ uniqueId });
-    if (!leave) {
-      return res.status(404).json({ message: "Leave not found" });
-    }
-    res.status(200).json({ message: "Leave deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-leaveRouter.get("/pending", async (req, res) => {
-  try {
-    const leaves = await Leave.find({ status: "pending" });
-    if (leaves.length === 0) {
-      return res.status(404).json({ message: "No pending leaves found" });
-    }
-    res.status(200).json(leaves); // You can return just leaves instead of wrapping in another object
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
+// List all approved leaves
 leaveRouter.get("/approved", async (req, res) => {
   try {
-    const approvedLeaves = await Leave.find({ status: "approved" });
-    if (approvedLeaves.length === 0) {
-      return res.status(404).json({ message: "No approved leaves found" });
-    }
-    res.status(200).json(approvedLeaves);
+    const employees = await UnifiedModel.find({ "leave.status": "approved" }).select("uniqueId name leave");
+    if (employees.length === 0) return res.status(404).json({ message: "No approved leaves found" });
+
+    const approvedLeaves = employees.map(emp => ({
+      uniqueId: emp.uniqueId,
+      leaveType: emp.leave.leaveType,  // Make sure to map the leaveType
+      startDate: emp.leave.startDate,
+      endDate: emp.leave.endDate
+      
+    }));
+
+    res.status(200).json({ approvedLeaves });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-leaveRouter.get("/:uniqueId", async (req, res) => {
-  res.json({ massage: "hello" });
-
-  const uniqueId = req.params.uniqueId;
-
-  try {
-    const leave = await Leave.findOne({ uniqueId });
-    if (!leave) {
-      return res.status(404).json({ message: "Leave not found" });
-    }
-    res.status(200).json({ leave });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Fetch all approved leave requests
 
 module.exports = leaveRouter;
